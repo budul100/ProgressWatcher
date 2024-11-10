@@ -1,7 +1,7 @@
-﻿using ProgressWatcher.Interfaces;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using ProgressWatcher.Interfaces;
 
 namespace ProgressWatcher
 {
@@ -114,10 +114,10 @@ namespace ProgressWatcher
 
         public IPackage GetPackage(string status, double weight)
         {
-            if (weight <= 0)
+            if (weight < 0 || weight > 1)
             {
                 throw new ArgumentException(
-                    message: "The weight of the progress must be greater than 0.",
+                    message: "The weight of a package must be greater than 0 and less or equal to 1.",
                     paramName: nameof(weight));
             }
 
@@ -143,10 +143,10 @@ namespace ProgressWatcher
 
         public IPackage GetPackage(int steps, string status, double weight)
         {
-            if (weight <= 0)
+            if (weight < 0 || weight > 1)
             {
                 throw new ArgumentException(
-                    message: "The weight of the progress must be greater than 0.",
+                    message: "The weight of a package must be greater than 0 and less or equal to 1.",
                     paramName: nameof(weight));
             }
 
@@ -159,30 +159,44 @@ namespace ProgressWatcher
             return child;
         }
 
-        public IPackage GetPackage<T>(IEnumerable<T> items, string status = default)
+        public IPackage GetPackage<T>(IEnumerable<T> items, int stepsPerItem = 1, string status = default)
         {
+            if (stepsPerItem <= 0)
+            {
+                throw new ArgumentException(
+                    message: "The steps per progress item must be greater than 0.",
+                    paramName: nameof(stepsPerItem));
+            }
+
             CreateChild(
                 status: status,
                 weight: 0,
-                steps: items?.Count() ?? 0,
+                steps: (items?.Count() ?? 0) * stepsPerItem,
                 isProgress: false);
 
             return child;
         }
 
-        public IPackage GetPackage<T>(IEnumerable<T> items, string status, double weight)
+        public IPackage GetPackage<T>(IEnumerable<T> items, int stepsPerItem, string status, double weight)
         {
-            if (weight <= 0)
+            if (stepsPerItem <= 0)
             {
                 throw new ArgumentException(
-                    message: "The weight of the progress must be greater than 0.",
+                    message: "The steps per progress item must be greater than 0.",
+                    paramName: nameof(stepsPerItem));
+            }
+
+            if (weight < 0 || weight > 1)
+            {
+                throw new ArgumentException(
+                    message: "The weight of a package must be greater than 0 and less or equal to 1.",
                     paramName: nameof(weight));
             }
 
             CreateChild(
                 status: status,
                 weight: weight,
-                steps: items?.Count() ?? 0,
+                steps: (items?.Count() ?? 0) * stepsPerItem,
                 isProgress: false);
 
             return child;
@@ -201,10 +215,10 @@ namespace ProgressWatcher
 
         public IProgress<double> GetProgress(string status, double weight)
         {
-            if (weight <= 0)
+            if (weight < 0 || weight > 1)
             {
                 throw new ArgumentException(
-                    message: "The weight of the progress must be greater than 0.",
+                    message: "The weight of a package must be greater than 0 and less or equal to 1.",
                     paramName: nameof(weight));
             }
 

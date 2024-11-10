@@ -1,9 +1,9 @@
-﻿using ProgressWatcher.Interfaces;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using ProgressWatcher.Interfaces;
 
 namespace ProgressWatcher
 {

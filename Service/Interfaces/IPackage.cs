@@ -26,9 +26,9 @@ namespace ProgressWatcher.Interfaces
 
         void Complete();
 
-        IPackage GetPackage<T>(IEnumerable<T> items, string status = default);
+        IPackage GetPackage<T>(IEnumerable<T> items, int stepsPerItem = 1, string status = default);
 
-        IPackage GetPackage<T>(IEnumerable<T> items, string status, double weight);
+        IPackage GetPackage<T>(IEnumerable<T> items, int stepsPerItem, string status, double weight);
 
         IPackage GetPackage(int steps, string status = default);
 
