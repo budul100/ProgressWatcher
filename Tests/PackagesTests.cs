@@ -11,7 +11,7 @@ namespace ProgressWatcher.Tests
         public void ChildNotCompleted()
         {
             var watcher = new Watcher();
-            var basePackage = watcher.Initialize(2, "Test");
+            var basePackage = watcher.GetPackage(2, "Test");
 
             var childpackage = basePackage.GetPackage(2, "test");
 
@@ -22,7 +22,7 @@ namespace ProgressWatcher.Tests
         public void ChildsCounter()
         {
             var watcher = new Watcher();
-            var basePackage = watcher.Initialize(2, "Base");
+            var basePackage = watcher.GetPackage(2, "Base");
 
             var childpackage1 = basePackage.GetPackage(2, "Child1");
 
@@ -57,7 +57,7 @@ namespace ProgressWatcher.Tests
         public void ChildsDisposal()
         {
             var watcher = new Watcher();
-            var basePackage = watcher.Initialize(2, "Base");
+            var basePackage = watcher.GetPackage(2, "Base");
 
             var childpackage1 = basePackage.GetPackage(2, "Child1");
 
@@ -84,7 +84,7 @@ namespace ProgressWatcher.Tests
         public void ChildsStatus()
         {
             var watcher = new Watcher();
-            var basePackage = watcher.Initialize(2, "Test1");
+            var basePackage = watcher.GetPackage(2, "Test1");
 
             Assert.True(watcher.Status == "Test1");
 
@@ -125,7 +125,7 @@ namespace ProgressWatcher.Tests
         public void ChildsWeight()
         {
             var watcher = new Watcher();
-            var basePackage = watcher.Initialize(2, "Base");
+            var basePackage = watcher.GetPackage(2, "Base");
 
             var childpackage1 = basePackage.GetPackage(2, "Child1", 0.8);
 
@@ -152,7 +152,7 @@ namespace ProgressWatcher.Tests
         public void TooMuchChilds()
         {
             var watcher = new Watcher();
-            var basePackage = watcher.Initialize(2, "Test");
+            var basePackage = watcher.GetPackage(2, "Test");
 
             using (var childpackage = basePackage.GetPackage(2, "test"))
             { }

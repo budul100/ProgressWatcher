@@ -1,9 +1,9 @@
-﻿using System;
+﻿using ProgressWatcher.Interfaces;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using ProgressWatcher.Interfaces;
 
 namespace ProgressWatcher
 {
@@ -112,7 +112,7 @@ namespace ProgressWatcher
             OnProgressCompleted();
         }
 
-        public virtual IPackage Initialize(int allSteps, string status)
+        public virtual IPackage GetPackage(int allSteps, string status)
         {
             if (package != default)
             {
@@ -134,9 +134,9 @@ namespace ProgressWatcher
             return package;
         }
 
-        public virtual IPackage Initialize(IEnumerable<object> allItems, string status)
+        public virtual IPackage GetPackage(IEnumerable<object> allItems, string status)
         {
-            Initialize(
+            GetPackage(
                 allSteps: allItems?.Count() ?? 0,
                 status: status);
 
