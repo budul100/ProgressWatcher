@@ -159,7 +159,7 @@ namespace ProgressWatcher
             return child;
         }
 
-        public IPackage GetPackage<T>(IEnumerable<T> items, int stepsPerItem = 1, string status = default)
+        public IPackage GetPackage<T>(IEnumerable<T> items, string status = default, int stepsPerItem = 1)
         {
             if (stepsPerItem <= 0)
             {
@@ -177,7 +177,7 @@ namespace ProgressWatcher
             return child;
         }
 
-        public IPackage GetPackage<T>(IEnumerable<T> items, int stepsPerItem, string status, double weight)
+        public IPackage GetPackage<T>(IEnumerable<T> items, string status, int stepsPerItem, double weight)
         {
             if (stepsPerItem <= 0)
             {
