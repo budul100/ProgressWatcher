@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace ProgressWatcher.Tests
@@ -13,7 +14,7 @@ namespace ProgressWatcher.Tests
             var watcher = new Watcher();
             var basePackage = watcher.GetPackage(2, "Test");
 
-            var childpackage = basePackage.GetPackage(2, "test");
+            var childPackage = basePackage.GetPackage(2, "test");
 
             Assert.Throws<InvalidOperationException>(() => basePackage.GetPackage(2, "test"));
         }
@@ -24,31 +25,31 @@ namespace ProgressWatcher.Tests
             var watcher = new Watcher();
             var basePackage = watcher.GetPackage(2, "Base");
 
-            var childpackage1 = basePackage.GetPackage(2, "Child1");
+            var childPackage1 = basePackage.GetPackage(2, "Child1");
 
-            childpackage1.NextStep();
+            childPackage1.NextStep();
 
             Assert.True(watcher.ProgressAll == 0.25);
 
-            childpackage1.NextStep();
+            childPackage1.NextStep();
 
             Assert.True(watcher.ProgressAll == 0.5);
 
-            Assert.Throws<InvalidOperationException>(() => childpackage1.NextStep());
+            Assert.Throws<InvalidOperationException>(() => childPackage1.NextStep());
 
             Assert.True(watcher.ProgressAll == 0.5);
 
-            var childpackage2 = basePackage.GetPackage(2, "Child2");
+            var childPackage2 = basePackage.GetPackage(2, "Child2");
 
-            childpackage2.NextStep();
+            childPackage2.NextStep();
 
             Assert.True(watcher.ProgressAll == 0.75);
 
-            childpackage2.NextStep();
+            childPackage2.NextStep();
 
             Assert.True(watcher.ProgressAll == 1);
 
-            Assert.Throws<InvalidOperationException>(() => childpackage2.NextStep());
+            Assert.Throws<InvalidOperationException>(() => childPackage2.NextStep());
 
             Assert.True(watcher.ProgressAll == 1);
         }
@@ -59,23 +60,23 @@ namespace ProgressWatcher.Tests
             var watcher = new Watcher();
             var basePackage = watcher.GetPackage(2, "Base");
 
-            var childpackage1 = basePackage.GetPackage(2, "Child1");
+            var childPackage1 = basePackage.GetPackage(2, "Child1");
 
-            childpackage1.NextStep();
+            childPackage1.NextStep();
 
             Assert.True(watcher.ProgressAll == 0.25);
 
-            childpackage1.Dispose();
+            childPackage1.Dispose();
 
             Assert.True(watcher.ProgressAll == 0.5);
 
-            var childpackage2 = basePackage.GetPackage(2, "Child2");
+            var childPackage2 = basePackage.GetPackage(2, "Child2");
 
-            childpackage2.NextStep();
+            childPackage2.NextStep();
 
             Assert.True(watcher.ProgressAll == 0.75);
 
-            childpackage2.Dispose();
+            childPackage2.Dispose();
 
             Assert.True(watcher.ProgressAll == 1);
         }
@@ -88,35 +89,35 @@ namespace ProgressWatcher.Tests
 
             Assert.True(watcher.Status == "Test1");
 
-            var childpackage1 = basePackage.GetPackage(2, "Test2");
+            var childPackage1 = basePackage.GetPackage(2, "Test2");
 
             Assert.True(watcher.Status == "Test2");
 
-            childpackage1.NextStep();
+            childPackage1.NextStep();
 
             Assert.True(watcher.Status == "Test2");
 
-            childpackage1.NextStep();
+            childPackage1.NextStep();
 
             Assert.True(watcher.Status == "Test2");
 
-            childpackage1.Dispose();
+            childPackage1.Dispose();
 
             Assert.True(watcher.Status == "Test1");
 
-            var childpackage2 = basePackage.GetPackage(2, "Test3");
+            var childPackage2 = basePackage.GetPackage(2, "Test3");
 
             Assert.True(watcher.Status == "Test3");
 
-            childpackage2.NextStep();
+            childPackage2.NextStep();
 
             Assert.True(watcher.Status == "Test3");
 
-            childpackage2.NextStep();
+            childPackage2.NextStep();
 
             Assert.True(watcher.Status == "Test3");
 
-            childpackage2.Dispose();
+            childPackage2.Dispose();
 
             Assert.True(watcher.Status == "Test1");
         }
@@ -127,23 +128,69 @@ namespace ProgressWatcher.Tests
             var watcher = new Watcher();
             var basePackage = watcher.GetPackage(2, "Base");
 
-            var childpackage1 = basePackage.GetPackage(2, "Child1", 0.8);
+            var childPackage1 = basePackage.GetPackage(2, "Child1", 0.8);
 
-            childpackage1.NextStep();
+            childPackage1.NextStep();
 
             Assert.True(watcher.ProgressAll == 0.4);
 
-            childpackage1.Dispose();
+            childPackage1.Dispose();
 
             Assert.True(watcher.ProgressAll == 0.8);
 
-            var childpackage2 = basePackage.GetPackage(2, "Child2");
+            var childPackage2 = basePackage.GetPackage(2, "Child2");
 
-            childpackage2.NextStep();
+            childPackage2.NextStep();
 
             Assert.True(watcher.ProgressAll == 0.9);
 
-            childpackage2.Dispose();
+            childPackage2.Dispose();
+
+            Assert.True(watcher.ProgressAll == 1);
+        }
+
+        [Fact]
+        public void HandleProgress()
+        {
+            var watcher = new Watcher();
+
+            var basePackage = watcher.GetPackage(2, "Test");
+
+            var childProgress1 = basePackage.GetProgress();
+
+            Task.Delay(1000).Wait();
+
+            childProgress1.Report(0.5);
+
+            Task.Delay(1000).Wait();
+
+            Assert.True(watcher.ProgressAll == 0.25);
+
+            childProgress1.Report(0.6);
+
+            Task.Delay(1000).Wait();
+
+            Assert.True(watcher.ProgressAll == 0.3);
+
+            var childProgress2 = basePackage.GetProgress();
+
+            Task.Delay(1000).Wait();
+
+            childProgress2.Report(0.5);
+
+            Task.Delay(1000).Wait();
+
+            Assert.True(watcher.ProgressAll == 0.75);
+
+            childProgress2.Report(0.6);
+
+            Task.Delay(1000).Wait();
+
+            Assert.True(watcher.ProgressAll == 0.8);
+
+            childProgress2.Report(1.5);
+
+            Task.Delay(1000).Wait();
 
             Assert.True(watcher.ProgressAll == 1);
         }
@@ -154,10 +201,10 @@ namespace ProgressWatcher.Tests
             var watcher = new Watcher();
             var basePackage = watcher.GetPackage(2, "Test");
 
-            using (var childpackage = basePackage.GetPackage(2, "test"))
+            using (var childPackage = basePackage.GetPackage(2, "test"))
             { }
 
-            using (var childpackage = basePackage.GetPackage(2, "test"))
+            using (var childPackage = basePackage.GetPackage(2, "test"))
             { }
 
             Assert.Throws<InvalidOperationException>(() => basePackage.GetPackage(2, "test"));

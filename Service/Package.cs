@@ -1,7 +1,7 @@
-﻿using System;
+﻿using ProgressWatcher.Interfaces;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using ProgressWatcher.Interfaces;
 
 namespace ProgressWatcher
 {
@@ -30,6 +30,8 @@ namespace ProgressWatcher
 
             progress = new Progress<double>();
             progress.ProgressChanged += OnProgressChanged;
+
+            Progress.Report(0);
 
             UpdateStatus(status);
         }
@@ -302,7 +304,8 @@ namespace ProgressWatcher
         {
             if (child != default)
             {
-                if (!child.IsCompleted && child.Progress == default)
+                if (!child.IsCompleted
+                    && child.Progress == default)
                 {
                     throw new InvalidOperationException(
                         "There is still an uncompleted progress child package.");
