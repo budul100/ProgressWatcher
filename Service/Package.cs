@@ -1,7 +1,7 @@
-﻿using ProgressWatcher.Interfaces;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using ProgressWatcher.Interfaces;
 
 namespace ProgressWatcher
 {
@@ -103,44 +103,44 @@ namespace ProgressWatcher
             UpdateStatus(Status);
         }
 
-        public IPackage GetPackage(string status = default)
+        public IPackage GetPackage()
         {
-            CreateChild(
-                status: status,
-                weight: 0,
+            return GetPackage(
                 steps: 1,
-                isProgress: false);
+                status: default,
+                weight: 0);
+        }
 
-            return child;
+        public IPackage GetPackage(string status)
+        {
+            return GetPackage(
+                steps: 1,
+                status: status,
+                weight: 0);
         }
 
         public IPackage GetPackage(string status, double weight)
         {
-            if (weight < 0 || weight > 1)
-            {
-                throw new ArgumentException(
-                    message: "The weight of a package must be greater than 0 and less or equal to 1.",
-                    paramName: nameof(weight));
-            }
-
-            CreateChild(
-                status: status,
-                weight: weight,
+            return GetPackage(
                 steps: 1,
-                isProgress: false);
-
-            return child;
+                status: status,
+                weight: weight);
         }
 
-        public IPackage GetPackage(int steps, string status = default)
+        public IPackage GetPackage(int steps)
         {
-            CreateChild(
-                status: status,
-                weight: 0,
+            return GetPackage(
                 steps: steps,
-                isProgress: false);
+                status: default,
+                weight: 0);
+        }
 
-            return child;
+        public IPackage GetPackage(int steps, string status)
+        {
+            return GetPackage(
+                steps: steps,
+                status: status,
+                weight: 0);
         }
 
         public IPackage GetPackage(int steps, string status, double weight)
@@ -161,22 +161,40 @@ namespace ProgressWatcher
             return child;
         }
 
-        public IPackage GetPackage<T>(IEnumerable<T> items, string status = default, int stepsPerItem = 1)
+        public IPackage GetPackage<T>(IEnumerable<T> items)
         {
-            if (stepsPerItem <= 0)
-            {
-                throw new ArgumentException(
-                    message: "The steps per progress item must be greater than 0.",
-                    paramName: nameof(stepsPerItem));
-            }
+            return GetPackage(
+                items: items,
+                status: default,
+                stepsPerItem: 1,
+                weight: 0);
+        }
 
-            CreateChild(
+        public IPackage GetPackage<T>(IEnumerable<T> items, string status)
+        {
+            return GetPackage(
+                items: items,
                 status: status,
-                weight: 0,
-                steps: (items?.Count() ?? 0) * stepsPerItem,
-                isProgress: false);
+                stepsPerItem: 1,
+                weight: 0);
+        }
 
-            return child;
+        public IPackage GetPackage<T>(IEnumerable<T> items, int stepsPerItem)
+        {
+            return GetPackage(
+                items: items,
+                status: default,
+                stepsPerItem: stepsPerItem,
+                weight: 0);
+        }
+
+        public IPackage GetPackage<T>(IEnumerable<T> items, string status, int stepsPerItem)
+        {
+            return GetPackage(
+                items: items,
+                status: status,
+                stepsPerItem: stepsPerItem,
+                weight: 0);
         }
 
         public IPackage GetPackage<T>(IEnumerable<T> items, string status, int stepsPerItem, double weight)
@@ -204,15 +222,18 @@ namespace ProgressWatcher
             return child;
         }
 
-        public IProgress<double> GetProgress(string status = default)
+        public IProgress<double> GetProgress()
         {
-            CreateChild(
-                status: status,
-                weight: 0,
-                steps: 0,
-                isProgress: true);
+            return GetProgress(
+                status: default,
+                weight: default);
+        }
 
-            return child.Progress;
+        public IProgress<double> GetProgress(string status)
+        {
+            return GetProgress(
+                status: status,
+                weight: default);
         }
 
         public IProgress<double> GetProgress(string status, double weight)
@@ -233,9 +254,16 @@ namespace ProgressWatcher
             return child.Progress;
         }
 
-        public void NextStep(int steps = 1)
+        public void NextStep()
         {
-            UpdateSteps(steps);
+            UpdateSteps(
+                steps: 1);
+        }
+
+        public void NextStep(int steps)
+        {
+            UpdateSteps(
+                steps: steps);
         }
 
         public void NextStep(string status)

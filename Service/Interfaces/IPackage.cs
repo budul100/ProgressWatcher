@@ -26,23 +26,37 @@ namespace ProgressWatcher.Interfaces
 
         void Complete();
 
-        IPackage GetPackage<T>(IEnumerable<T> items, string status = default, int stepsPerItem = 1);
+        IPackage GetPackage<T>(IEnumerable<T> items);
+
+        IPackage GetPackage<T>(IEnumerable<T> items, string status);
+
+        IPackage GetPackage<T>(IEnumerable<T> items, int stepsPerItem);
+
+        IPackage GetPackage<T>(IEnumerable<T> items, string status, int stepsPerItem);
 
         IPackage GetPackage<T>(IEnumerable<T> items, string status, int stepsPerItem, double weight);
 
-        IPackage GetPackage(int steps, string status = default);
+        IPackage GetPackage(int steps);
+
+        IPackage GetPackage(int steps, string status);
 
         IPackage GetPackage(int steps, string status, double weight);
 
-        IPackage GetPackage(string status = default);
+        IPackage GetPackage();
+
+        IPackage GetPackage(string status);
 
         IPackage GetPackage(string status, double weight);
 
-        IProgress<double> GetProgress(string status = default);
+        IProgress<double> GetProgress();
+
+        IProgress<double> GetProgress(string status);
 
         IProgress<double> GetProgress(string status, double weight);
 
-        void NextStep(int steps = 1);
+        void NextStep();
+
+        void NextStep(int steps);
 
         void NextStep(int steps, string status);
 
