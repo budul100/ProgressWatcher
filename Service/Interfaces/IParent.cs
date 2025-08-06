@@ -2,21 +2,20 @@
 
 namespace ProgressWatcher.Interfaces
 {
-    internal interface IParent
-        : IDisposable
+    internal interface IParent : IDisposable
     {
-        #region Internal Methods
+        #region Public Methods
 
-        internal void DisposeChild();
+        void DisposeChild();
 
-        internal void StartChild();
+        void StartChild();
 
-        internal void UpdateChild(double progress);
+        void UpdateChild(double progress);
 
-        internal void UpdateTip(string status);
+        void UpdateTip(string status);
 
-        internal void UpdateTip(double progress);
+        void UpdateTip(double progress);
 
-        #endregion Internal Methods
+        #endregion Public Methods
     }
 }
