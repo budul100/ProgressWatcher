@@ -9,8 +9,14 @@
 		<PackageId>budul.ProgressWatcher</PackageId>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<RepositoryUrl>https://github.com/budul100/ProgressWatcher</RepositoryUrl>
-		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<Description>Progress handler to visualize a process state</Description>
+		<!-- No package by default-->
+		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+	</PropertyGroup>
+
+	<!-- Package for release only -->
+	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 	</PropertyGroup>
 
 </Project>

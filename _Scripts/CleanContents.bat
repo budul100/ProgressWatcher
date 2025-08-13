@@ -1,7 +1,7 @@
 @echo off
 setlocal enabledelayedexpansion
 
-pushd %~dp0..\..
+pushd %~dp0..
 
 echo ================================================
 echo C# Project Cleanup Script
