@@ -62,6 +62,7 @@ namespace ProgressWatcher
         public bool IsRunning
         {
             get => isRunning;
+
             private set
             {
                 if (isRunning != value)
@@ -78,6 +79,7 @@ namespace ProgressWatcher
         public double ProgressAll
         {
             get => progressFull;
+
             private set
             {
                 if (progressFull != value)
@@ -94,6 +96,7 @@ namespace ProgressWatcher
         public double ProgressTip
         {
             get => progressTip;
+
             set
             {
                 progressTip = value;
@@ -107,6 +110,7 @@ namespace ProgressWatcher
         public string Status
         {
             get => status;
+
             private set
             {
                 if (status != value)
@@ -131,22 +135,17 @@ namespace ProgressWatcher
         }
 
         /// <summary>
-        /// Disposes the active child package and resets watcher state.
-        /// This is the explicit implementation for <see cref="IParent.DisposeChild"/>.
+        /// Disposes the current child package and advances the step counter.
         /// </summary>
         void IParent.DisposeChild()
         {
+            Status = default;
+            IsRunning = false;
+            ProgressTip = 0;
+
             package = default;
 
-            Status = default;
-            ProgressTip = 0;
-            ProgressAll = 0;
-            IsRunning = false;
-
-            ChildDisposed?.Invoke(
-                sender: this,
-                e: default);
-
+            OnChildDisposed();
             OnProgressCompleted();
         }
 
@@ -165,9 +164,9 @@ namespace ProgressWatcher
             }
 
             Status = default;
+            IsRunning = true;
             ProgressTip = 0;
             ProgressAll = 0;
-            IsRunning = true;
 
             package = new Package(
                 parent: this,
@@ -212,7 +211,11 @@ namespace ProgressWatcher
         /// <param name="progress">New aggregate progress value.</param>
         void IParent.UpdateChild(double progress)
         {
-            ProgressAll = progress;
+            // Clamp to [0.0, 1.0] to avoid tiny floating-point overshoots from child calculations.
+            var clampedMax = Math.Max(0.0, progress);
+            var clampedMin = Math.Min(1.0, clampedMax);
+
+            ProgressAll = clampedMin;
         }
 
         /// <summary>
@@ -271,6 +274,16 @@ namespace ProgressWatcher
         #endregion Protected Methods
 
         #region Private Methods
+
+        /// <summary>
+        /// Raises the <see cref="ChildDisposed"/> event.
+        /// </summary>
+        private void OnChildDisposed()
+        {
+            ChildDisposed?.Invoke(
+                sender: this,
+                e: default);
+        }
 
         /// <summary>
         /// Raises the <see cref="ProgressCompleted"/> event.

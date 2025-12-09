@@ -53,6 +53,11 @@ namespace ProgressWatcher.Interfaces
         void Complete();
 
         /// <summary>
+        /// Flush remaining thread-local counters into the package (e.g. after Parallel.ForEach).
+        /// </summary>
+        void FlushCounterLocal();
+
+        /// <summary>
         /// Creates a child package to represent processing of the provided collection using one step per item.
         /// </summary>
         /// <typeparam name="T">The item type in the collection.</typeparam>
@@ -195,6 +200,18 @@ namespace ProgressWatcher.Interfaces
         /// </summary>
         /// <param name="status">New status message after advancing.</param>
         void NextStep(string status);
+
+        /// <summary>
+        /// Report a single step from the current thread using thread-local batching.
+        /// Call this from hot loops (Parallel.ForEach) instead of NextStep() to reduce contention.
+        /// </summary>
+        void NextStepLocal();
+
+        /// <summary>
+        /// Report multiple steps from the current thread using thread-local batching.
+        /// </summary>
+        /// <param name="count">Number of steps.</param>
+        void NextStepLocal(int count);
 
         /// <summary>
         /// Sets or updates the current status message for this package.
