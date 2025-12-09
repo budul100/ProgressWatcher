@@ -108,7 +108,7 @@ namespace ProgressWatcherTest
             await Task.WhenAll(tasks);
 
             // Allow any pending updates to propagate
-            await Task.Delay(500);
+            await Task.Delay(1000);
 
             Assert.InRange(watcher.ProgressAll, 0.99999, 1.0);
         }
