@@ -2,7 +2,8 @@
 
 namespace ProgressWatcher.Interfaces
 {
-    internal interface IParent : IDisposable
+    internal interface IParent 
+        : IDisposable
     {
         #region Public Methods
 

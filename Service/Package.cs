@@ -5,6 +5,9 @@ using ProgressWatcher.Interfaces;
 
 namespace ProgressWatcher
 {
+    /// <summary>
+    /// Represents a progress package that can contain child packages and report progress to a parent.
+    /// </summary>
     public class Package
         : IPackage, IParent
     {
@@ -23,6 +26,11 @@ namespace ProgressWatcher
 
         #region Internal Constructors
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Package"/> class with the default number of steps.
+        /// </summary>
+        /// <param name="parent">The parent that receives progress updates.</param>
+        /// <param name="status">Initial status message for the package.</param>
         internal Package(IParent parent, string status)
         {
             this.parent = parent;
@@ -36,6 +44,13 @@ namespace ProgressWatcher
             UpdateStatus(status);
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Package"/> class with a specific number of steps.
+        /// </summary>
+        /// <param name="parent">The parent that receives progress updates.</param>
+        /// <param name="status">Initial status message for the package.</param>
+        /// <param name="steps">Total steps this package represents. Must be >= 0.</param>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="steps"/> is less than 0.</exception>
         internal Package(IParent parent, string status, int steps)
         {
             if (steps < 0)
@@ -55,43 +70,73 @@ namespace ProgressWatcher
 
         #region Public Properties
 
+        /// <summary>
+        /// Gets the total number of steps for this package.
+        /// </summary>
         public int AllSteps { get; }
 
+        /// <summary>
+        /// Gets the current progress as a value between 0.0 and 1.0.
+        /// </summary>
         public double CurrentProgress { get; private set; }
 
+        /// <summary>
+        /// Gets the number of completed steps.
+        /// </summary>
         public int CurrentSteps { get; private set; }
 
+        /// <summary>
+        /// Gets a value indicating whether the package has completed (progress >= 1.0).
+        /// </summary>
         public bool IsCompleted { get; private set; }
 
+        /// <summary>
+        /// Gets the current status message associated with this package.
+        /// </summary>
         public string Status { get; private set; }
 
         #endregion Public Properties
 
         #region Internal Properties
 
+        /// <summary>
+        /// Gets the internal <see cref="IProgress{Double}"/> used to report fractional progress for this package.
+        /// </summary>
         internal IProgress<double> Progress => progress;
 
         #endregion Internal Properties
 
         #region Public Methods
 
+        /// <summary>
+        /// Clears the current status (sets it to null).
+        /// </summary>
         public void ClearStatus()
         {
             UpdateStatus(default);
         }
 
+        /// <summary>
+        /// Marks this package and any active child packages as complete.
+        /// </summary>
         public void Complete()
         {
             child?.Complete();
             UpdateProgress(1);
         }
 
+        /// <summary>
+        /// Releases resources used by the package and notifies the parent.
+        /// </summary>
         public void Dispose()
         {
             Dispose(true);
             GC.SuppressFinalize(this);
         }
 
+        /// <summary>
+        /// Disposes the current child package and advances the step counter.
+        /// </summary>
         void IParent.DisposeChild()
         {
             child = default;
@@ -103,6 +148,10 @@ namespace ProgressWatcher
             UpdateStatus(Status);
         }
 
+        /// <summary>
+        /// Creates and returns a child package with a single step.
+        /// </summary>
+        /// <returns>A child <see cref="IPackage"/>.</returns>
         public IPackage GetPackage()
         {
             return GetPackage(
@@ -111,6 +160,11 @@ namespace ProgressWatcher
                 weight: 0);
         }
 
+        /// <summary>
+        /// Creates and returns a child package with a single step and an initial status.
+        /// </summary>
+        /// <param name="status">Initial status for the child package.</param>
+        /// <returns>A child <see cref="IPackage"/>.</returns>
         public IPackage GetPackage(string status)
         {
             return GetPackage(
@@ -119,6 +173,13 @@ namespace ProgressWatcher
                 weight: 0);
         }
 
+        /// <summary>
+        /// Creates and returns a child package with a single step, initial status and a weight.
+        /// </summary>
+        /// <param name="status">Initial status for the child package.</param>
+        /// <param name="weight">Weight of the child within the parent's remaining progress (0.0 - 1.0).</param>
+        /// <returns>A child <see cref="IPackage"/>.</returns>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="weight"/> is outside the range [0,1].</exception>
         public IPackage GetPackage(string status, double weight)
         {
             return GetPackage(
@@ -127,6 +188,11 @@ namespace ProgressWatcher
                 weight: weight);
         }
 
+        /// <summary>
+        /// Creates and returns a child package with a specific number of steps.
+        /// </summary>
+        /// <param name="steps">Number of steps for the child package.</param>
+        /// <returns>A child <see cref="IPackage"/>.</returns>
         public IPackage GetPackage(int steps)
         {
             return GetPackage(
@@ -135,6 +201,12 @@ namespace ProgressWatcher
                 weight: 0);
         }
 
+        /// <summary>
+        /// Creates and returns a child package with a specific number of steps and an initial status.
+        /// </summary>
+        /// <param name="steps">Number of steps for the child package.</param>
+        /// <param name="status">Initial status for the child package.</param>
+        /// <returns>A child <see cref="IPackage"/>.</returns>
         public IPackage GetPackage(int steps, string status)
         {
             return GetPackage(
@@ -143,6 +215,14 @@ namespace ProgressWatcher
                 weight: 0);
         }
 
+        /// <summary>
+        /// Creates and returns a child package with steps, status and weight.
+        /// </summary>
+        /// <param name="steps">Number of steps for the child package.</param>
+        /// <param name="status">Initial status for the child package.</param>
+        /// <param name="weight">Weight of the child within the parent's remaining progress (0.0 - 1.0).</param>
+        /// <returns>A child <see cref="IPackage"/>.</returns>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="weight"/> is outside the range [0,1].</exception>
         public IPackage GetPackage(int steps, string status, double weight)
         {
             if (weight < 0 || weight > 1)
@@ -161,6 +241,12 @@ namespace ProgressWatcher
             return child;
         }
 
+        /// <summary>
+        /// Creates a child package that will represent processing of the given collection using one step per item.
+        /// </summary>
+        /// <typeparam name="T">Type of items in the collection.</typeparam>
+        /// <param name="items">Items to be processed.</param>
+        /// <returns>A child <see cref="IPackage"/>.</returns>
         public IPackage GetPackage<T>(IEnumerable<T> items)
         {
             return GetPackage(
@@ -170,6 +256,13 @@ namespace ProgressWatcher
                 weight: 0);
         }
 
+        /// <summary>
+        /// Creates a child package for the given collection with an initial status, using one step per item.
+        /// </summary>
+        /// <typeparam name="T">Type of items in the collection.</typeparam>
+        /// <param name="items">Items to be processed.</param>
+        /// <param name="status">Initial status for the child package.</param>
+        /// <returns>A child <see cref="IPackage"/>.</returns>
         public IPackage GetPackage<T>(IEnumerable<T> items, string status)
         {
             return GetPackage(
@@ -179,6 +272,13 @@ namespace ProgressWatcher
                 weight: 0);
         }
 
+        /// <summary>
+        /// Creates a child package for the given collection with a specified number of steps per item.
+        /// </summary>
+        /// <typeparam name="T">Type of items in the collection.</typeparam>
+        /// <param name="items">Items to be processed.</param>
+        /// <param name="stepsPerItem">Number of steps to allocate per item (must be > 0).</param>
+        /// <returns>A child <see cref="IPackage"/>.</returns>
         public IPackage GetPackage<T>(IEnumerable<T> items, int stepsPerItem)
         {
             return GetPackage(
@@ -188,6 +288,14 @@ namespace ProgressWatcher
                 weight: 0);
         }
 
+        /// <summary>
+        /// Creates a child package for the given collection with status and steps-per-item.
+        /// </summary>
+        /// <typeparam name="T">Type of items in the collection.</typeparam>
+        /// <param name="items">Items to be processed.</param>
+        /// <param name="status">Initial status for the child package.</param>
+        /// <param name="stepsPerItem">Number of steps to allocate per item (must be > 0).</param>
+        /// <returns>A child <see cref="IPackage"/>.</returns>
         public IPackage GetPackage<T>(IEnumerable<T> items, string status, int stepsPerItem)
         {
             return GetPackage(
@@ -197,6 +305,16 @@ namespace ProgressWatcher
                 weight: 0);
         }
 
+        /// <summary>
+        /// Creates a child package representing processing of a collection with steps-per-item and weight.
+        /// </summary>
+        /// <typeparam name="T">Type of items in the collection.</typeparam>
+        /// <param name="items">Items to be processed.</param>
+        /// <param name="status">Initial status for the child package.</param>
+        /// <param name="stepsPerItem">Number of steps to allocate per item (must be > 0).</param>
+        /// <param name="weight">Weight of the child within the parent's remaining progress (0.0 - 1.0).</param>
+        /// <returns>A child <see cref="IPackage"/>.</returns>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="stepsPerItem"/> less than 0 or <paramref name="weight"/> is outside [0,1].</exception>
         public IPackage GetPackage<T>(IEnumerable<T> items, string status, int stepsPerItem, double weight)
         {
             if (stepsPerItem <= 0)
@@ -222,6 +340,10 @@ namespace ProgressWatcher
             return child;
         }
 
+        /// <summary>
+        /// Creates and returns a child progress reporter without status or weight.
+        /// </summary>
+        /// <returns>An <see cref="IProgress{Double}"/> instance reporting child progress.</returns>
         public IProgress<double> GetProgress()
         {
             return GetProgress(
@@ -229,6 +351,11 @@ namespace ProgressWatcher
                 weight: default);
         }
 
+        /// <summary>
+        /// Creates and returns a child progress reporter with an initial status.
+        /// </summary>
+        /// <param name="status">Initial status for the progress reporter.</param>
+        /// <returns>An <see cref="IProgress{Double}"/> instance reporting child progress.</returns>
         public IProgress<double> GetProgress(string status)
         {
             return GetProgress(
@@ -236,6 +363,13 @@ namespace ProgressWatcher
                 weight: default);
         }
 
+        /// <summary>
+        /// Creates and returns a child progress reporter with initial status and weight.
+        /// </summary>
+        /// <param name="status">Initial status for the progress reporter.</param>
+        /// <param name="weight">Weight of the reporter within the parent's remaining progress (0.0 - 1.0).</param>
+        /// <returns>An <see cref="IProgress{Double}"/> instance reporting child progress.</returns>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="weight"/> is outside the range [0,1].</exception>
         public IProgress<double> GetProgress(string status, double weight)
         {
             if (weight < 0 || weight > 1)
@@ -254,18 +388,29 @@ namespace ProgressWatcher
             return child.Progress;
         }
 
+        /// <summary>
+        /// Advances the progress by one step.
+        /// </summary>
         public void NextStep()
         {
             UpdateSteps(
                 steps: 1);
         }
 
+        /// <summary>
+        /// Advances the progress by the specified number of steps.
+        /// </summary>
+        /// <param name="steps">Number of steps to advance.</param>
         public void NextStep(int steps)
         {
             UpdateSteps(
                 steps: steps);
         }
 
+        /// <summary>
+        /// Advances the progress by one step and updates the status.
+        /// </summary>
+        /// <param name="status">New status message.</param>
         public void NextStep(string status)
         {
             NextStep();
@@ -273,6 +418,11 @@ namespace ProgressWatcher
             UpdateStatus(status);
         }
 
+        /// <summary>
+        /// Advances the progress by the specified number of steps and updates the status.
+        /// </summary>
+        /// <param name="steps">Number of steps to advance.</param>
+        /// <param name="status">New status message.</param>
         public void NextStep(int steps, string status)
         {
             NextStep(steps);
@@ -280,6 +430,10 @@ namespace ProgressWatcher
             UpdateStatus(status);
         }
 
+        /// <summary>
+        /// Sets the package status message.
+        /// </summary>
+        /// <param name="status">New status message or null to clear.</param>
         public void SetStatus(string status)
         {
             UpdateStatus(status);
@@ -310,6 +464,10 @@ namespace ProgressWatcher
 
         #region Protected Methods
 
+        /// <summary>
+        /// Releases resources used by the package.
+        /// </summary>
+        /// <param name="disposing">True when called from Dispose; false when called from finalizer.</param>
         protected virtual void Dispose(bool disposing)
         {
             if (!isDisposed)
@@ -328,6 +486,9 @@ namespace ProgressWatcher
 
         #region Private Methods
 
+        /// <summary>
+        /// Completes and disposes the current child package if present.
+        /// </summary>
         private void CompleteChild()
         {
             if (child != default)
@@ -343,6 +504,15 @@ namespace ProgressWatcher
             }
         }
 
+        /// <summary>
+        /// Creates a child package or child progress reporter.
+        /// </summary>
+        /// <param name="status">Initial status for the child.</param>
+        /// <param name="weight">Weight of the child within the parent's remaining progress.</param>
+        /// <param name="steps">Number of steps for the child (0 for progress-only children).</param>
+        /// <param name="isProgress">Indicates whether this child is a progress reporter (true) or a step-based package (false).</param>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="weight"/> is outside [0,1] or resulting progress would exceed 1.</exception>
+        /// <exception cref="InvalidOperationException">Thrown when the parent package is already completed or has no child slots left.</exception>
         private void CreateChild(string status, double weight, int steps, bool isProgress)
         {
             if (weight < 0 || weight > 1)
@@ -396,6 +566,11 @@ namespace ProgressWatcher
             parent.StartChild();
         }
 
+        /// <summary>
+        /// Calculates the effective weight for a child when no explicit weight was provided.
+        /// </summary>
+        /// <param name="weight">Provided weight (0 means automatic calculation).</param>
+        /// <returns>Computed weight between 0 and 1.</returns>
         private double GetChildWeight(double weight)
         {
             var result = weight == 0
@@ -405,6 +580,11 @@ namespace ProgressWatcher
             return result;
         }
 
+        /// <summary>
+        /// Handler for internal progress changes; updates current steps and overall progress.
+        /// </summary>
+        /// <param name="sender">Sender of the progress event.</param>
+        /// <param name="progress">Progress value between 0.0 and 1.0.</param>
         private void OnProgressChanged(object sender, double progress)
         {
             CurrentSteps = Convert.ToInt32(Math.Floor(progress * AllSteps));
@@ -412,6 +592,10 @@ namespace ProgressWatcher
             UpdateProgress(progress);
         }
 
+        /// <summary>
+        /// Updates internal progress state and notifies the parent when progress advances.
+        /// </summary>
+        /// <param name="progress">New progress value.</param>
         private void UpdateProgress(double progress)
         {
             if (progress > 1)
@@ -429,6 +613,10 @@ namespace ProgressWatcher
             }
         }
 
+        /// <summary>
+        /// Updates the current status message and notifies the parent.
+        /// </summary>
+        /// <param name="status">New status message.</param>
         private void UpdateStatus(string status)
         {
             Status = status;
@@ -436,6 +624,12 @@ namespace ProgressWatcher
             parent.UpdateTip(status);
         }
 
+        /// <summary>
+        /// Advances internal step count and updates progress accordingly.
+        /// </summary>
+        /// <param name="steps">Number of steps to advance (must be >= 0).</param>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="steps"/> is less than 0.</exception>
+        /// <exception cref="InvalidOperationException">Thrown when the package is disposed or already completed.</exception>
         private void UpdateSteps(int steps)
         {
             if (steps < 0)

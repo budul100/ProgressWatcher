@@ -1,22 +1,40 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>netstandard2.0;netstandard2.1;net6.0;net7.0;net8.0</TargetFrameworks>
-		<AssemblyVersion>1.3.1</AssemblyVersion>
-		<FileVersion>$(AssemblyVersion)</FileVersion>
-		<Version>$(AssemblyVersion)</Version>
+		<TargetFrameworks>netstandard2.0;netstandard2.1;net7.0;net8.0</TargetFrameworks>
+		<Version>1.4.0</Version>
+		<FileVersion>$(Version)</FileVersion>
+		<AssemblyVersion>$(Version)</AssemblyVersion>
+		<AssemblyName>ProgressWatcher</AssemblyName>
 		<Authors>budul</Authors>
-		<PackageId>budul.ProgressWatcher</PackageId>
-		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<RepositoryUrl>https://github.com/budul100/ProgressWatcher</RepositoryUrl>
 		<Description>Progress handler to visualize a process state</Description>
+
+		<PackageId>budul.ProgressWatcher</PackageId>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageTags>Progress handler, Process state</PackageTags>
+		<PackageProjectUrl>https://www.nuget.org/packages/budul.ProgressWatcher</PackageProjectUrl>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+
+		<DebugType>portable</DebugType>
+		<OutputType>Library</OutputType>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<EmbedUntrackedSources>true</EmbedUntrackedSources>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
+
 		<!-- No package by default-->
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 	</PropertyGroup>
 
-	<!-- Package for release only -->
 	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
+		<!-- Package for release only -->
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 	</PropertyGroup>
+
+	<ItemGroup>
+		<None Include="../README.md" Pack="true" PackagePath="\" />
+	</ItemGroup>
 
 </Project>
