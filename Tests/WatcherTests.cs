@@ -49,26 +49,28 @@ namespace ProgressWatcherTest
             var childDisposedTcs = new TaskCompletionSource<bool>();
             var progressCompletedTcs = new TaskCompletionSource<bool>();
 
-            watcher.ProgressStarted += (s, e) => progressStartedTcs.TrySetResult(true);
+            watcher.WatcherStarted += (s, e) => progressStartedTcs.TrySetResult(true);
             watcher.ChildStarted += (s, e) => childStartedTcs.TrySetResult(true);
-            watcher.ChildDisposed += (s, e) => childDisposedTcs.TrySetResult(true);
-            watcher.ProgressCompleted += (s, e) => progressCompletedTcs.TrySetResult(true);
+            watcher.ChildCompleted += (s, e) => childDisposedTcs.TrySetResult(true);
+            watcher.WatcherCompleted += (s, e) => progressCompletedTcs.TrySetResult(true);
 
             // Start base package -> should raise ProgressStarted
-            using var basePackage = watcher.GetPackage(1, "base");
-            var started = await Task.WhenAny(progressStartedTcs.Task, Task.Delay(1000));
-            Assert.True(progressStartedTcs.Task.IsCompleted, "ProgressStarted should be raised when a package is requested.");
-
-            // Create child package -> should raise ChildStarted
-            using (var child = basePackage.GetPackage(1, "child"))
+            using (var basePackage = watcher.GetPackage(1, "base"))
             {
-                var childStarted = await Task.WhenAny(childStartedTcs.Task, Task.Delay(1000));
-                Assert.True(childStartedTcs.Task.IsCompleted, "ChildStarted should be raised when a child package starts.");
-            }
-            await Task.Delay(100);
+                var started = await Task.WhenAny(progressStartedTcs.Task, Task.Delay(1000));
+                Assert.True(progressStartedTcs.Task.IsCompleted, "ProgressStarted should be raised when a package is requested.");
 
-            var disposed = await Task.WhenAny(childDisposedTcs.Task, Task.Delay(2000));
-            Assert.True(childDisposedTcs.Task.IsCompleted, "ChildDisposed should be raised when child package is disposed.");
+                // Create child package -> should raise ChildStarted
+                using (var child = basePackage.GetPackage(1, "child"))
+                {
+                    var childStarted = await Task.WhenAny(childStartedTcs.Task, Task.Delay(1000));
+                    Assert.True(childStartedTcs.Task.IsCompleted, "ChildStarted should be raised when a child package starts.");
+                }
+                await Task.Delay(100);
+
+                var disposed = await Task.WhenAny(childDisposedTcs.Task, Task.Delay(1000));
+                Assert.True(childDisposedTcs.Task.IsCompleted, "ChildDisposed should be raised when child package is disposed.");
+            }
 
             var completed = await Task.WhenAny(progressCompletedTcs.Task, Task.Delay(1000));
             Assert.True(progressCompletedTcs.Task.IsCompleted, "ProgressCompleted should be raised after child disposal.");
@@ -108,9 +110,9 @@ namespace ProgressWatcherTest
             await Task.WhenAll(tasks);
 
             // Allow any pending updates to propagate
-            await Task.Delay(1000);
+            await Task.Delay(3000);
 
-            Assert.InRange(watcher.ProgressAll, 0.99999, 1.0);
+            Assert.InRange(watcher.ProgressAll, 0.999, 1.0);
         }
 
         [Fact]

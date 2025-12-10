@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace ProgressWatcher.Interfaces
 {
@@ -7,11 +7,13 @@ namespace ProgressWatcher.Interfaces
     {
         #region Public Methods
 
+        void CompleteChild();
+
         void DisposeChild();
 
         void StartChild();
 
-        void UpdateChild(double progress);
+        void UpdateAll(double progress);
 
         void UpdateTip(string status);
 

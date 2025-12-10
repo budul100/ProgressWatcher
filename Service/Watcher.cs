@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -9,7 +9,8 @@ namespace ProgressWatcher
 {
     /// <summary>
     /// Tracks progress for operations and provides child progress packages.
-    /// Implements <see cref="INotifyPropertyChanged"/> and <see cref="IParent"/> to coordinate child progress updates.
+    /// Implements <see cref="INotifyPropertyChanged"/> and <see cref="IParent"/>
+    /// to coordinate child progress updates.
     /// </summary>
     public class Watcher
         : INotifyPropertyChanged, IParent
@@ -30,7 +31,7 @@ namespace ProgressWatcher
         /// <summary>
         /// Raised when a child package has been disposed and the watcher has been reset.
         /// </summary>
-        public event EventHandler ChildDisposed;
+        public event EventHandler ChildCompleted;
 
         /// <summary>
         /// Raised when a child package signals it has started work.
@@ -38,19 +39,19 @@ namespace ProgressWatcher
         public event EventHandler ChildStarted;
 
         /// <summary>
+        /// Standard property-changed event used by data-binding consumers.
+        /// </summary>
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        /// <summary>
         /// Raised when progress has completed (child disposed or finished).
         /// </summary>
-        public event EventHandler ProgressCompleted;
+        public event EventHandler WatcherCompleted;
 
         /// <summary>
         /// Raised when progress is requested / started for a new package.
         /// </summary>
-        public event EventHandler ProgressStarted;
-
-        /// <summary>
-        /// Standard property-changed event used by data-binding consumers.
-        /// </summary>
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event EventHandler WatcherStarted;
 
         #endregion Public Events
 
@@ -126,6 +127,14 @@ namespace ProgressWatcher
         #region Public Methods
 
         /// <summary>
+        /// Disposes the current child package and advances the step counter.
+        /// </summary>
+        void IParent.CompleteChild()
+        {
+            OnChildCompleted();
+        }
+
+        /// <summary>
         /// Disposes the watcher and any active child package.
         /// </summary>
         public virtual void Dispose()
@@ -139,14 +148,14 @@ namespace ProgressWatcher
         /// </summary>
         void IParent.DisposeChild()
         {
+            package = default;
+
             Status = default;
             IsRunning = false;
             ProgressTip = 0;
 
-            package = default;
-
-            OnChildDisposed();
-            OnProgressCompleted();
+            OnChildCompleted();
+            OnWatcherCompleted();
         }
 
         /// <summary>
@@ -173,7 +182,7 @@ namespace ProgressWatcher
                 status: status,
                 steps: allSteps);
 
-            OnProgressRequested();
+            OnWatcherStarted();
 
             return package;
         }
@@ -187,8 +196,10 @@ namespace ProgressWatcher
         /// <returns>The created <see cref="IPackage"/> instance.</returns>
         public virtual IPackage GetPackage(IEnumerable<object> allItems, string status)
         {
+            var allSteps = allItems?.Count() ?? 0;
+
             GetPackage(
-                allSteps: allItems?.Count() ?? 0,
+                allSteps: allSteps,
                 status: status);
 
             return package;
@@ -199,17 +210,15 @@ namespace ProgressWatcher
         /// </summary>
         void IParent.StartChild()
         {
-            ChildStarted?.Invoke(
-                sender: this,
-                e: default);
+            OnChildStarted();
         }
 
         /// <summary>
         /// Updates the aggregate progress reported by a child package.
-        /// Explicit implementation of <see cref="IParent.UpdateChild"/>.
+        /// Explicit implementation of <see cref="IParent.UpdateAll"/>.
         /// </summary>
         /// <param name="progress">New aggregate progress value.</param>
-        void IParent.UpdateChild(double progress)
+        void IParent.UpdateAll(double progress)
         {
             // Clamp to [0.0, 1.0] to avoid tiny floating-point overshoots from child calculations.
             var clampedMax = Math.Max(0.0, progress);
@@ -275,32 +284,30 @@ namespace ProgressWatcher
 
         #region Private Methods
 
-        /// <summary>
-        /// Raises the <see cref="ChildDisposed"/> event.
-        /// </summary>
-        private void OnChildDisposed()
+        private void OnChildCompleted()
         {
-            ChildDisposed?.Invoke(
+            ChildCompleted?.Invoke(
                 sender: this,
                 e: default);
         }
 
-        /// <summary>
-        /// Raises the <see cref="ProgressCompleted"/> event.
-        /// </summary>
-        private void OnProgressCompleted()
+        private void OnChildStarted()
         {
-            ProgressCompleted?.Invoke(
+            ChildStarted?.Invoke(
                 sender: this,
                 e: default);
         }
 
-        /// <summary>
-        /// Raises the <see cref="ProgressStarted"/> event.
-        /// </summary>
-        private void OnProgressRequested()
+        private void OnWatcherCompleted()
         {
-            ProgressStarted?.Invoke(
+            WatcherCompleted?.Invoke(
+                sender: this,
+                e: default);
+        }
+
+        private void OnWatcherStarted()
+        {
+            WatcherStarted?.Invoke(
                 sender: this,
                 e: default);
         }

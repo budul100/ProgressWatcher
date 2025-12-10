@@ -50,33 +50,35 @@ namespace ProgressWatcherTest
             var watcher = new Watcher();
             var basePackage = watcher.GetPackage(2, "Base");
 
-            var childPackage1 = basePackage.GetPackage(2, "Child1");
+            using (var childPackage1 = basePackage.GetPackage(2, "Child1"))
+            {
+                childPackage1.NextStep();
 
-            childPackage1.NextStep();
+                Assert.Equal(0.25, watcher.ProgressAll);
 
-            Assert.Equal(0.25, watcher.ProgressAll);
+                childPackage1.NextStep();
 
-            childPackage1.NextStep();
+                Assert.Equal(0.5, watcher.ProgressAll);
 
-            Assert.Equal(0.5, watcher.ProgressAll);
+                Assert.Throws<InvalidOperationException>(childPackage1.NextStep);
 
-            Assert.Throws<InvalidOperationException>(() => childPackage1.NextStep());
+                Assert.Equal(0.5, watcher.ProgressAll);
+            }
 
-            Assert.Equal(0.5, watcher.ProgressAll);
+            using (var childPackage2 = basePackage.GetPackage(2, "Child2"))
+            {
+                childPackage2.NextStep();
 
-            var childPackage2 = basePackage.GetPackage(2, "Child2");
+                Assert.Equal(0.75, watcher.ProgressAll);
 
-            childPackage2.NextStep();
+                childPackage2.NextStep();
 
-            Assert.Equal(0.75, watcher.ProgressAll);
+                Assert.Equal(1, watcher.ProgressAll);
 
-            childPackage2.NextStep();
+                Assert.Throws<InvalidOperationException>(() => childPackage2.NextStep());
 
-            Assert.Equal(1, watcher.ProgressAll);
-
-            Assert.Throws<InvalidOperationException>(() => childPackage2.NextStep());
-
-            Assert.Equal(1, watcher.ProgressAll);
+                Assert.Equal(1, watcher.ProgressAll);
+            }
         }
 
         /// <summary>

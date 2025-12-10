@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -31,7 +31,7 @@ namespace ProgressWatcher
         private double childWeight;
         private long currentProgressBits;
         private int currentSteps;
-        private int isCompletedFlag;
+        private int isCompleted;
         private bool isDisposed;
         private long lastReportedProgressBits;
         private int lastReportTick;
@@ -60,10 +60,7 @@ namespace ProgressWatcher
 
             AllSteps = progressAllSteps;
 
-            progress = new Progress<double>();
-            progress.ProgressChanged += OnProgressChanged;
-
-            // initialize atomic progress to 0
+            // initialize atomic progress
             Interlocked.Exchange(
                 location1: ref currentProgressBits,
                 value: BitConverter.DoubleToInt64Bits(0.0));
@@ -71,7 +68,7 @@ namespace ProgressWatcher
                 location1: ref currentSteps,
                 value: 0);
             Interlocked.Exchange(
-                location1: ref isCompletedFlag,
+                location1: ref isCompleted,
                 value: 0);
 
             // initialize reporting trackers
@@ -84,6 +81,9 @@ namespace ProgressWatcher
 
             // initialize thread local counter
             localCounter = new ThreadLocal<int>(() => 0, trackAllValues: true);
+
+            progress = new Progress<double>();
+            progress.ProgressChanged += OnProgressChanged;
 
             Progress.Report(0);
 
@@ -127,7 +127,7 @@ namespace ProgressWatcher
                 location1: ref currentSteps,
                 value: 0);
             Interlocked.Exchange(
-                location1: ref isCompletedFlag,
+                location1: ref isCompleted,
                 value: 0);
 
             // initialize reporting trackers
@@ -156,38 +156,22 @@ namespace ProgressWatcher
         /// <summary>
         /// Gets the current progress as a value between 0.0 and 1.0.
         /// </summary>
-        public double CurrentProgress
-        {
-            get => BitConverter.Int64BitsToDouble(Interlocked.Read(ref currentProgressBits));
-
-            private set => Interlocked.Exchange(
-                location1: ref currentProgressBits,
-                value: BitConverter.DoubleToInt64Bits(value));
-        }
+        public double CurrentProgress => BitConverter
+            .Int64BitsToDouble(Interlocked.Read(ref currentProgressBits));
 
         /// <summary>
         /// Gets the number of completed steps.
         /// </summary>
-        public int CurrentSteps
-        {
-            get => Interlocked.Add(ref currentSteps, 0);
-
-            private set => Interlocked.Exchange(
-                location1: ref currentSteps,
-                value: value);
-        }
+        public int CurrentSteps => Interlocked.Add(
+            location1: ref currentSteps,
+            value: 0);
 
         /// <summary>
         /// Gets a value indicating whether the package has completed (progress >= 1.0).
         /// </summary>
-        public bool IsCompleted
-        {
-            get => Interlocked.Add(ref isCompletedFlag, 0) != 0;
-
-            private set => Interlocked.Exchange(
-                location1: ref isCompletedFlag,
-                value: value ? 1 : 0);
-        }
+        public bool IsCompleted => Interlocked.Exchange(
+            location1: ref isCompleted,
+            value: 0) != 0;
 
         /// <summary>
         /// Gets the current status message associated with this package.
@@ -226,6 +210,11 @@ namespace ProgressWatcher
             UpdateProgress(1);
         }
 
+        void IParent.CompleteChild()
+        {
+            parent.CompleteChild();
+        }
+
         /// <summary>
         /// Releases resources used by the package and notifies the parent.
         /// </summary>
@@ -240,22 +229,19 @@ namespace ProgressWatcher
         /// </summary>
         void IParent.DisposeChild()
         {
-            // protect structural changes to child/childWeight
             lock (syncRoot)
             {
                 child = default;
-                Interlocked.Increment(ref currentSteps);
 
-                // Update progress outside the lock to avoid holding lock while notifying parent
-                var currentProgress = CurrentProgress + childWeight;
-                UpdateProgress(currentProgress);
+                Interlocked.Increment(ref currentSteps);
             }
 
-            // Notify parent that child was disposed
-            parent?.DisposeChild();
+            var currentProgress = CurrentProgress + childWeight;
+            UpdateProgress(currentProgress);
 
-            // Status update can follow
             UpdateStatus(Status);
+
+            parent.CompleteChild();
         }
 
         /// <summary>
@@ -524,8 +510,7 @@ namespace ProgressWatcher
         /// </summary>
         public void NextStep()
         {
-            UpdateSteps(
-                steps: 1);
+            UpdateSteps(1);
         }
 
         /// <summary>
@@ -603,10 +588,10 @@ namespace ProgressWatcher
             parent.StartChild();
         }
 
-        void IParent.UpdateChild(double progress)
+        void IParent.UpdateAll(double progress)
         {
             var currentProgress = CurrentProgress + (progress * childWeight);
-            parent.UpdateChild(currentProgress);
+            parent.UpdateAll(currentProgress);
         }
 
         void IParent.UpdateTip(double progress)
@@ -626,7 +611,8 @@ namespace ProgressWatcher
         /// <summary>
         /// Releases resources used by the package.
         /// </summary>
-        /// <param name="disposing">True when called from Dispose; false when called from finalizer.</param>
+        /// <param name="disposing">True when called from Dispose;
+        /// false when called from finalizer.</param>
         protected virtual void Dispose(bool disposing)
         {
             if (!isDisposed)
@@ -664,8 +650,6 @@ namespace ProgressWatcher
 
                     child.Dispose();
                     child = default;
-
-                    childWeight = 0;
                 }
             }
         }
@@ -735,12 +719,12 @@ namespace ProgressWatcher
                     minIntervalMs: minIntervalMs);
             }
 
-            var weightToAssign = GetChildWeight(weight);
+            var newWeight = GetChildWeight(weight);
 
             lock (syncRoot)
             {
                 child = newChild;
-                childWeight = weightToAssign;
+                childWeight = newWeight;
             }
 
             parent.StartChild();
@@ -838,7 +822,9 @@ namespace ProgressWatcher
                     value: newBits,
                     comparand: oldBits) == oldBits)
                 {
-                    IsCompleted = progress >= 1;
+                    Interlocked.Exchange(
+                        location1: ref isCompleted,
+                        value: progress >= 1 ? 1 : 0);
 
                     // Throttled reporting to parent
                     var lastBits = Interlocked.Read(ref lastReportedProgressBits);
@@ -858,11 +844,13 @@ namespace ProgressWatcher
                             value: newReportedBits,
                             comparand: lastBits) == lastBits)
                         {
-                            Interlocked.Exchange(ref lastReportTick, now);
+                            Interlocked.Exchange(
+                                location1: ref lastReportTick,
+                                value: now);
 
                             // Notify parent using the new progress
                             parent.UpdateTip(progress);
-                            parent.UpdateChild(progress);
+                            parent.UpdateAll(progress);
                         }
                     }
 
@@ -911,15 +899,18 @@ namespace ProgressWatcher
 
             CompleteChild();
 
-            var newSteps = Interlocked.Add(ref currentSteps, steps);
+            Interlocked.Add(
+                location1: ref currentSteps,
+                value: steps);
 
-            if (newSteps > AllSteps)
+            if (CurrentSteps > AllSteps)
             {
-                Interlocked.Exchange(ref currentSteps, AllSteps);
-                newSteps = AllSteps;
+                Interlocked.Exchange(
+                    location1: ref currentSteps,
+                    value: AllSteps);
             }
 
-            var currentProgress = (double)newSteps / AllSteps;
+            var currentProgress = (double)CurrentSteps / AllSteps;
 
             UpdateProgress(currentProgress);
         }
