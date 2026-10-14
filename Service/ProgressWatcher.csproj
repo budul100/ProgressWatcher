@@ -1,18 +1,18 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>netstandard2.0;netstandard2.1;net6.0;net7.0;net8.0</TargetFrameworks>
-		<Version>2.1.0</Version>
+		<TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+		<Version>3.0.0</Version>
 		<FileVersion>$(Version)</FileVersion>
 		<AssemblyVersion>$(Version)</AssemblyVersion>
 		<AssemblyName>ProgressWatcher</AssemblyName>
-		<Authors>budul</Authors>
+		<Authors>budul100</Authors>
 		<RepositoryUrl>https://github.com/budul100/ProgressWatcher</RepositoryUrl>
 		<Description>Progress handler to visualize a process state</Description>
 
 		<PackageId>budul.ProgressWatcher</PackageId>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-		<PackageTags>Progress handler, Process state</PackageTags>
+		<PackageTags>progress;progress-handler;process-state</PackageTags>
 		<PackageProjectUrl>https://www.nuget.org/packages/budul.ProgressWatcher</PackageProjectUrl>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 
@@ -31,6 +31,10 @@
 	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
 		<!-- Package for release only -->
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
+		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
 	</PropertyGroup>
 
 	<ItemGroup>

@@ -3,7 +3,7 @@
 Lightweight, thread-safe progress coordination library for nested and parallel operations.
 
 - PackageId: `budul.ProgressWatcher`
-- Supported TFMs: `netstandard2.0`, `netstandard2.1`, `net7.0`, `net8.0`
+- Supported TFMs: `net8.0`, `net9.0`, `net10.0`
 - Repository: https://github.com/budul100/ProgressWatcher
 - License: MIT
 
