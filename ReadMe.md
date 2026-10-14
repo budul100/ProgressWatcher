@@ -1,5 +1,7 @@
 # ProgressWatcher
 
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/budul100/ProgressWatcher/blob/main/LICENSE) [![NuGet](https://img.shields.io/nuget/v/budul.ProgressWatcher.svg)](https://www.nuget.org/packages/budul.ProgressWatcher/)
+
 Lightweight, thread-safe progress coordination library for nested and parallel operations.
 
 - PackageId: `budul.ProgressWatcher`
